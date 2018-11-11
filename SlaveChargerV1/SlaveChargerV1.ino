@@ -371,7 +371,7 @@ void loop()
       break;
 
     case 1://Charger on
-      if (digitalRead(DIG_IN_1) == LOW)//********Change this back to high when enable wire is connected to BMS
+      if (digitalRead(DIG_IN_1) == HIGH)//********Change this back to high when enable wire is connected to BMS
       {
         if (bChargerEnabled == false)
         {

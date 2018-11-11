@@ -1104,7 +1104,7 @@ void ACcurrentlimit()
   {
     //if (modulelimcur > (15000 * 1.5)) //enable second charger if current available >15A
     //{
-      modulelimcur = modulelimcur * 0.5;
+      //modulelimcur = modulelimcur * 0.5; //need this line to halve the power between chargers.
       slavechargerenable = 1;
   /*
     }
