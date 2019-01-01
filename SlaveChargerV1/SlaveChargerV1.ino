@@ -47,7 +47,7 @@ bool bChargerEnabled;
 
 //*********EVSE VARIABLE   DATA ******************
 byte Proximity = 0;
-int Type = 2;
+int Type = 1;
 uint16_t ACvoltIN = 220; // AC input voltage 240VAC for EU/UK and 110VAC for US
 //proximity status values for type 1
 #define Unconnected 0 // 3.3V

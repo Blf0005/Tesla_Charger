@@ -48,15 +48,15 @@ bool bChargerEnabled;
 
 //*********EVSE VARIABLE   DATA ******************
 byte Proximity = 0;
-int Type = 2;
+int Type = 1;
 uint16_t ACvoltIN = 220; // AC input voltage 240VAC for EU/UK and 110VAC for US
 //proximity status values for type 1
 #define Unconnected 0 // 3.3V
 #define Buttonpress 1 // 2.3V
 #define Connected 2 // 1.35V
 
-volatile uint32_t pilottimer = 0;
-volatile uint16_t timehigh, duration = 0;
+volatile int pilottimer = 0;
+volatile int timehigh, duration = 0;
 volatile uint16_t accurlim = 0;
 volatile int dutycycle = 0;
 
@@ -116,6 +116,8 @@ void setup()
   Timer3.attachInterrupt(Charger_msgs).start(90000); // charger messages every 100ms
 
   attachInterrupt(EVSE_PILOT, Pilotread , CHANGE);
+  //attachInterrupt(EVSE_PILOT, PilotHigh , RISING);
+  //attachInterrupt(EVSE_PILOT, PilotLow , FALLING);
 
   Wire.begin();
   EEPROM.read(0, parameters);
@@ -554,6 +556,10 @@ void loop()
           Serial.print(ModStat[x], BIN);
           Serial.println();
         }
+        Serial.print("Duration: ");
+        Serial.println(duration);
+        Serial.print("EVSE Pilot Current Limit: ");
+        Serial.println(accurlim / 1000);
       }
       else
       {
@@ -583,9 +589,9 @@ void loop()
         Serial.print(" AC limit : ");
         Serial.print(accurlim);
       */
-      Serial.print(" Cable Limit: ");
+      Serial.print(" |  Cable Limit: ");
       Serial.print(cablelim);
-      Serial.print(" Module Cur Request: ");
+      Serial.print(" |  Module Cur Request: ");
       Serial.print(modulelimcur / 1.5, 0);
       /*
         Serial.print(" DC AC Cur Lim: ");
@@ -593,9 +599,9 @@ void loop()
         Serial.print(" Active: ");
         Serial.print(activemodules);
       */
-      Serial.print(" DC total Cur:");
+      Serial.print(" |  DC total Cur:");
       Serial.print(totdccur * 0.005, 2);
-      Serial.print(" DC Setpoint:");
+      Serial.print(" |  DC Setpoint:");
       Serial.print(parameters.voltSet * 0.01, 0);
       Serial.print("\n");
     }
@@ -619,10 +625,9 @@ void loop()
           if (digitalRead(DIG_IN_1) == HIGH)
           {
             state = 2;// initialize modules
-
+            Serial.print(" State Set to 2 inside of evseread. line 624\n\n");
             tboot = millis();
             if (millis() - tstate > 500){
-             // Serial.print(" State Set to 2 inside of evseread. line 592\n\n");
               tstate = millis();
             }
           }
@@ -1062,11 +1067,29 @@ void Pilotcalc()
   {
     duration = micros() - pilottimer;
     pilottimer = micros();
+    //Serial.print("Duration: ");
+    //Serial.println(duration);
   }
   else
   {
     accurlim = (micros() - pilottimer) * 100 / duration * 600; //Calculate the duty cycle then multiply by 600 to get mA current limit
   }
+}
+
+void PilotHigh()
+{
+   attachInterrupt(EVSE_PILOT, PilotLow , FALLING);
+   pilottimer = micros();
+}
+
+void PilotLow(){
+  attachInterrupt(EVSE_PILOT, PilotHigh , RISING);
+    duration = micros() - pilottimer;
+    Serial.print("Duration: ");
+    Serial.println(duration);
+    accurlim = ((duration/1000000) * 100) * 600; //Calculate the duty cycle then multiply by 600 to get mA current limit
+    Serial.print("EVSE Pilot Current Limit: ");
+    Serial.println(accurlim);
 }
 
 void ACcurrentlimit()
