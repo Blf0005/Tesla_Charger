@@ -114,6 +114,7 @@ void setup()
   Serial.begin(115200);  //Initialize our USB port which will always be redefined as SerialUSB to use the Native USB port tied directly to the SAM3X processor.
 
   Timer3.attachInterrupt(Charger_msgs).start(90000); // charger messages every 100ms
+  Timer4.attachInterrupt(Control_msgs).start(250000); // charger messages every 250ms
 
   attachInterrupt(EVSE_PILOT, Pilotread , CHANGE);
   //attachInterrupt(EVSE_PILOT, PilotHigh , RISING);
@@ -898,83 +899,85 @@ void Charger_msgs()
   /*////////////////////////////////////////////////////////////////////////////////////////////////////////
     External CAN
     ////////////////////////////////////////////////////////////////////////////////////////////////////////*/
-  uint16_t y, z = 0;
-  outframe.id = StatusID;
-  if (parameters.canControl == 3)
-  {
-    outframe.id = StatusID + 1;
-  }
-  outframe.length = 8;            // Data payload 8 bytes
-  outframe.extended = 0;          // Extended addresses - 0=11-bit 1=29bit
-  outframe.rtr = 0;                 //No request
-  outframe.data.bytes[0] = 0x00;
-  for (int x = 0; x < 3; x++)
-  {
-    y = y +  dcvolt[x] ;
-  }
-  outframe.data.bytes[0] = y / 3;
-
-  if (Config == Singlephase)
-  {
-    for (int x = 0; x < 3; x++)
-    {
-      z = z + (accur[x] * 66.66) ;
-    }
-  }
-  else
-  {
-    z = accur[2] * 66.66;
-  }
-
-  outframe.data.bytes[1] = lowByte (z);
-  outframe.data.bytes[2] = highByte (z);
-
-  outframe.data.bytes[3] = lowByte (uint16_t (totdccur)); //0.005Amp
-  outframe.data.bytes[4] = highByte (uint16_t (totdccur));  //0.005Amp
-  outframe.data.bytes[5] = lowByte (uint16_t (modulelimcur * 0.66666));
-  outframe.data.bytes[6] = highByte (uint16_t (modulelimcur * 0.66666));
-  outframe.data.bytes[7] = 0x00;
-  outframe.data.bytes[7] = Proximity << 6;
-  outframe.data.bytes[7] = outframe.data.bytes[7] || (Type << 4);
-  Can1.sendFrame(outframe);
-
-  /////////Elcon Message////////////
-
-  outframe.id = ElconID;
-  outframe.length = 8;            // Data payload 8 bytes
-  outframe.extended = 1;          // Extended addresses - 0=11-bit 1=29bit
-  outframe.rtr = 0;                 //No request
-
-
-  outframe.data.bytes[0] = highByte (y * 10 / 3);
-  outframe.data.bytes[1] = lowByte (y * 10 / 3);
-  outframe.data.bytes[2] = highByte (uint16_t (totdccur * 20)); //0.005Amp conv to 0.1
-  outframe.data.bytes[3] = lowByte (uint16_t (totdccur * 20)); //0.005Amp conv to 0.1
-  outframe.data.bytes[4] = 0x00;
-  outframe.data.bytes[5] = 0x00;
-  outframe.data.bytes[6] = 0x00;
-  outframe.data.bytes[7] = 0x00;
-  Can1.sendFrame(outframe);
-
-
-  ///DCDC CAN//////////////////////////////////////////////////////////////////////
-  if (dcdcenable)
-  {
-    outframe.id = 0x3D8;
-    outframe.length = 3;            // Data payload 8 bytes
-    outframe.extended = 0;          // Extended addresses - 0=11-bit 1=29bit
-    outframe.rtr = 0;                 //No request
-
-    outframe.data.bytes[0] = highByte (uint16_t((parameters.dcdcsetpoint - 9000) / 68.359375) << 6);
-    outframe.data.bytes[1] = lowByte (uint16_t((parameters.dcdcsetpoint - 9000) / 68.359375) << 6);
-    
-    outframe.data.bytes[1] = outframe.data.bytes[1] | 0x20;
-    outframe.data.bytes[2] = 0x00;
-    Can1.sendFrame(outframe);
-  }
+//  uint16_t y, z = 0;
+//  outframe.id = StatusID;
+//  if (parameters.canControl == 3)
+//  {
+//    outframe.id = StatusID + 1;
+//  }
+//  outframe.length = 8;            // Data payload 8 bytes
+//  outframe.extended = 0;          // Extended addresses - 0=11-bit 1=29bit
+//  outframe.rtr = 0;                 //No request
+//  outframe.data.bytes[0] = 0x00;
+//  for (int x = 0; x < 3; x++)
+//  {
+//    y = y +  dcvolt[x] ;
+//  }
+//  outframe.data.bytes[0] = y / 3;
+//
+//  if (Config == Singlephase)
+//  {
+//    for (int x = 0; x < 3; x++)
+//    {
+//      z = z + (accur[x] * 66.66) ;
+//    }
+//  }
+//  else
+//  {
+//    z = accur[2] * 66.66;
+//  }
+//
+//  outframe.data.bytes[1] = lowByte (z);
+//  outframe.data.bytes[2] = highByte (z);
+//
+//  outframe.data.bytes[3] = lowByte (uint16_t (totdccur)); //0.005Amp
+//  outframe.data.bytes[4] = highByte (uint16_t (totdccur));  //0.005Amp
+//  outframe.data.bytes[5] = lowByte (uint16_t (modulelimcur * 0.66666));
+//  outframe.data.bytes[6] = highByte (uint16_t (modulelimcur * 0.66666));
+//  outframe.data.bytes[7] = 0x00;
+//  outframe.data.bytes[7] = Proximity << 6;
+//  outframe.data.bytes[7] = outframe.data.bytes[7] || (Type << 4);
+//  Can1.sendFrame(outframe);
+//
+//  /////////Elcon Message////////////
+//
+//  outframe.id = ElconID;
+//  outframe.length = 8;            // Data payload 8 bytes
+//  outframe.extended = 1;          // Extended addresses - 0=11-bit 1=29bit
+//  outframe.rtr = 0;                 //No request
+//
+//
+//  outframe.data.bytes[0] = highByte (y * 10 / 3);
+//  outframe.data.bytes[1] = lowByte (y * 10 / 3);
+//  outframe.data.bytes[2] = highByte (uint16_t (totdccur * 20)); //0.005Amp conv to 0.1
+//  outframe.data.bytes[3] = lowByte (uint16_t (totdccur * 20)); //0.005Amp conv to 0.1
+//  outframe.data.bytes[4] = 0x00;
+//  outframe.data.bytes[5] = 0x00;
+//  outframe.data.bytes[6] = 0x00;
+//  outframe.data.bytes[7] = 0x00;
+//  Can1.sendFrame(outframe);
+//
+//
+//  ///DCDC CAN//////////////////////////////////////////////////////////////////////
+//  if (dcdcenable)
+//  {
+//    outframe.id = 0x3D8;
+//    outframe.length = 3;            // Data payload 8 bytes
+//    outframe.extended = 0;          // Extended addresses - 0=11-bit 1=29bit
+//    outframe.rtr = 0;                 //No request
+//
+//    outframe.data.bytes[0] = highByte (uint16_t((parameters.dcdcsetpoint - 9000) / 68.359375) << 6);
+//    outframe.data.bytes[1] = lowByte (uint16_t((parameters.dcdcsetpoint - 9000) / 68.359375) << 6);
+//    
+//    outframe.data.bytes[1] = outframe.data.bytes[1] | 0x20;
+//    outframe.data.bytes[2] = 0x00;
+//    Can1.sendFrame(outframe);
+//  }
 
 ////////////////////////////////////////////////////////////////////
-
+}
+void Control_msgs(){
+  CAN_FRAME outframe;  //A structured variable according to due_can library for transmitting CAN data.
   if (parameters.canControl == 1)
   {
     outframe.id = ControlID;
