@@ -16,6 +16,10 @@
 #define EVSE_ACTIVATE       44
 #define EVSE_PILOT          2
 #define EVSE_PROX           A0
+#define SWCAN_MODE0         60
+#define SWCAN_MODE1         61
+#define EXTHSCAN_EN         42
+#define SWCAN_RLY           43
 
 #define EEPROM_VERSION      10
 

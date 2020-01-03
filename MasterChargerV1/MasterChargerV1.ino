@@ -54,6 +54,7 @@ uint16_t ACvoltIN = 220; // AC input voltage 240VAC for EU/UK and 110VAC for US
 #define Unconnected 0 // 3.3V
 #define Buttonpress 1 // 2.3V
 #define Connected 2 // 1.35V
+uint16_t val = 0;
 
 volatile int pilottimer = 0;
 volatile int timehigh, duration = 0;
@@ -177,6 +178,18 @@ void setup()
   pinMode(CHARGER1_ACTIVATE, OUTPUT); //CHG1 ACTIVATE
   pinMode(CHARGER2_ACTIVATE, OUTPUT);  //CHG2 ACTIVATE
   pinMode(CHARGER3_ACTIVATE, OUTPUT); //CHG3 ACTIVATE
+  pinMode(SWCAN_MODE0, OUTPUT);   //SWCAN SELECT LINES
+  pinMode(SWCAN_MODE1, OUTPUT);
+  pinMode(EXTHSCAN_EN, OUTPUT); //EXTERNAL HIGH SPEED CAN ENABLE LINE
+  pinMode(SWCAN_RLY, OUTPUT); //RELAY TO CONNECT CP TO SWCAN.
+ 
+  //////////////////////////////////////////////////////////////////////////////////////
+
+  digitalWrite(SWCAN_MODE0,LOW);    //disable swcan
+  digitalWrite(SWCAN_MODE1,LOW);
+  digitalWrite(SWCAN_RLY,LOW);
+
+  digitalWrite(EXTHSCAN_EN,HIGH);   //enable external high speed CAN.
   //////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -209,8 +222,10 @@ void loop()
 
   if (Can1.available())
   {
+    Serial.println(incoming.id);
     Can1.read(incoming);
     canextdecode(incoming);
+    
   }
 
   if(DCDC_Flag == false){
@@ -500,6 +515,8 @@ void loop()
     tlast = millis();
     if (debug != 0)
     {
+      Serial.print("Proximity value: ");
+      Serial.println(val);
       Serial.println();
       Serial.print(millis());
       Serial.print(" State: ");
@@ -980,6 +997,7 @@ void Control_msgs(){
   CAN_FRAME outframe;  //A structured variable according to due_can library for transmitting CAN data.
   if (parameters.canControl == 1)
   {
+    //Serial.print("Sending can control frame");
     outframe.id = ControlID;
     outframe.length = 8;            // Data payload 8 bytes
     outframe.extended = 0;          // Extended addresses - 0=11-bit 1=29bit
@@ -1009,7 +1027,6 @@ void Control_msgs(){
 
 void evseread()
 {
-  uint16_t val = 0;
   val = analogRead(EVSE_PROX);     // read the input pin
   if ( Type == 2)
   {
