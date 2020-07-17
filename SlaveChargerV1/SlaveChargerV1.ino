@@ -1167,14 +1167,18 @@ void canextdecode(CAN_FRAME & frame)
       //maxdccur = (frame.data.bytes[3] << 8) + frame.data.bytes[4];
       modulelimcur  = (frame.data.bytes[5] << 8) + frame.data.bytes[6];
       Proximity = frame.data.bytes[7];
+
       if (candebug == 1)
       {
         Serial.println();
+        Serial.print("State: ");
         Serial.print( state);
-        Serial.print(" ");
+        Serial.print("  Voltage Setpoint: ");
         Serial.print(parameters.voltSet);
-        Serial.print(" ");
+        Serial.print("   module current limit: ");
         Serial.print(modulelimcur);
+        Serial.print("  Proximity: ");
+        Serial.print(Proximity);
         Serial.println();
       }
 
